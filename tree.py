@@ -5,15 +5,24 @@ import MySQLdb
 
 class _db():
 
-	def __init__(self):
-		self.connection = MySQLdb.connect(user='root')
-		self.c = connection.cursor()
+	connection = None
+	c = None
+
+	def __init__(self, host="localhost", user="ste", passwd="ste",db="tree", charset="utf8"):
+
+		self.connection = MySQLdb.connect(host, user, passwd, db)
+		self.connection.autocommit = True
+		self.c = self.connection.cursor()
 
 
 	def sqlExec(self, sql):
+		print sql
 		self.c.execute(sql)
 		# connection.insert_id()
-		return self.c.lastrowid 
+		lid = self.c.lastrowid
+		self.commit()
+		print lid
+		return lid
 
 	def sqlGet(self, sql):
 		self.c.execute(sql)
@@ -23,11 +32,19 @@ class _db():
 		self.c.execute(sql)
 		return self.c.fetchall()
 
+	def commit(self):
+		self.connection.commit()
+
+	def close(self):
+		self.c.close()
+
 
 class _tree(_db):
 
 	def __init__(self):
-		pass
+		# super(_tree, self).__init__() # python3
+		_db.__init__(self)
+
 
 	def insertRoot(self, label):
 		sql = "insert into forest (pid, label) values (0, '{}')".format(label)
@@ -49,7 +66,7 @@ class _tree(_db):
 class tree(_tree):
 
 	def addChild(self, pid, label):
-		self.insert(pid, label)
+		return self.insert(pid, label)
 
 	def getParentByID(self, id):
 		return self.get(id)
